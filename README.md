@@ -29,6 +29,8 @@ Set `ANTHROPIC_API_KEY` before `make refresh` to have Claude
 ~120-word thesis + risk bullets for each pick. Without a key the stage skips
 gracefully and the UI shows a `THESIS STALE` tag.
 
+Deeper docs: [ARCHITECTURE.md](ARCHITECTURE.md) (design, data flow, signal math, invariants) · [CLAUDE.md](CLAUDE.md) (working conventions for Claude Code).
+
 ## How it works
 
 1. **`fetch_spending`** — one `spending_over_time` POST per ticker to the
