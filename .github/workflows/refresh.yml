@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write # the alert step opens an issue when material awards appear
 
 jobs:
   refresh:
