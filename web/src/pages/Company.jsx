@@ -85,6 +85,8 @@ export default function Company() {
   const thesis = useData('thesis')
   const news = useData('news')
   const universe = useData('universe')
+  const awards = useData('awards')
+  const audit = useData('audit')
 
   const rows = useMemo(
     () => (signals?.tickers ?? []).filter((r) => r.id === ticker),
@@ -98,6 +100,8 @@ export default function Company() {
   const track = backtest?.track?.[ticker]
   const t = thesis?.entries?.[ticker]
   const fired = rows.filter((r) => r.fired)
+  const drove = awards && !awards.__error ? awards.drivers?.[ticker] : null
+  const aud = audit && !audit.__error ? audit[ticker] : null
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -116,6 +120,25 @@ export default function Company() {
       </div>
 
       <div className="cols">
+        <div>
+        {drove?.rows?.length > 0 && (
+          <div className="panel">
+            <h2>WHAT DROVE IT — top awards in the {drove.fired === 'buy' ? 'surge' : 'collapse'} quarter ending {drove.quarter_end}</h2>
+            <table className="board">
+              <thead><tr><th>DATE</th><th className="num">AMOUNT</th><th>AGENCY</th><th>WHAT</th></tr></thead>
+              <tbody>
+                {drove.rows.map((a, i) => (
+                  <tr key={i}>
+                    <td className="mut">{a.date}</td>
+                    <td className="num">{fmtB(a.amount ?? 0)}</td>
+                    <td className="mut">{a.agency}</td>
+                    <td className="mut" style={{ fontSize: 11 }}>{(a.desc || a.award_id || '').toLowerCase()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="panel">
           <h2>SIGNAL HISTORY</h2>
           {fired.length === 0 && <p className="mut">This ticker has never fired a signal.</p>}
@@ -149,6 +172,7 @@ export default function Company() {
             </p>
           )}
         </div>
+        </div>
 
         <div>
           {t && (
@@ -170,6 +194,23 @@ export default function Company() {
               <p style={{ fontSize: 12 }}>{uni.patterns.join(' · ')}</p>
               {uni.notes.length > 0 && (
                 <p className="mut" style={{ fontSize: 11 }}>{uni.notes.join(' — ')}</p>
+              )}
+              {aud?.contamination && (
+                <p style={{ fontSize: 11 }}
+                   className={aud.contamination.leak_pct > 0.05 ? '' : 'mut'}>
+                  {aud.contamination.leak_pct > 0.05
+                    ? <span style={{ color: 'var(--amber)' }}>
+                        ⚠ audit: ~{Math.round(aud.contamination.leak_pct * 100)}% of matched
+                        dollars (last 2y) belong to other entities
+                        {aud.contamination.top_leaks?.[0] && ` (largest: ${aud.contamination.top_leaks[0].name})`}
+                      </span>
+                    : <>audit: series ~{(100 - aud.contamination.leak_pct * 100).toFixed(0)}% clean over the last 2y</>}
+                </p>
+              )}
+              {aud?.top?.length > 0 && (
+                <p className="mut" style={{ fontSize: 11 }}>
+                  largest matched entities: {aud.top.slice(0, 4).map((e) => e.name?.toLowerCase()).join(' · ')}
+                </p>
               )}
             </div>
           )}

@@ -20,9 +20,23 @@ Z_FADE = -1.5              # fire "fade" at z <= this
 DOLLAR_FLOOR = 200e6       # trailing-4q obligations must exceed this (kills small-denominator noise)
 KNOWLEDGE_LAG_DAYS = 135   # quarter end -> date the data is publicly knowable
                            # (90-day DoD FPDS embargo + agency submission/publication buffer)
+MATERIALITY_MIN = 0.005    # surge must be >= 0.5% of the latest knowable annual
+                           # revenue to fire (a $300M surge is noise for Amazon,
+                           # transformative for Kratos). Tickers with no EDGAR
+                           # revenue keep the un-gated rule.
 FORWARD_WINDOWS = [21, 63, 126]  # trading days (~1m / 3m / 6m)
 TRAIN_END = "2017-12-31"   # knowledge dates <= this are "in-sample"; later = holdout
 BOOTSTRAP_N = 10_000
+
+# --- Portfolio simulation ---
+HOLD_DAYS = 126             # hold each buy signal ~6 months from its knowledge date
+TRADING_COST = 0.001        # 10 bps per side
+TICKER_SECTOR_ETF = {       # sector-hedge benchmark per mapping `sector`
+    "defense": "ITA", "space": "ITA", "health": "XLV", "energy": "XLE",
+    "it_services": "XLK", "engineering": "XLI", "logistics": "XLI",
+    "services": "XLI",
+}
+EXTRA_BENCHMARKS = ["XLK", "XLI"]
 
 # --- Current ranking ---
 # Rank on the most recent quarter whose end is at least this many days past —

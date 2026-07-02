@@ -14,6 +14,7 @@ export default function PicksBoard({ rows, side, thesis, news }) {
         <tr>
           <th>#</th><th>TICKER</th><th>COMPANY</th>
           <th className="num">Z-SCORE</th><th></th>
+          <th className="num" title="surge as a share of the company's latest annual revenue (SEC EDGAR)">MATERIALITY</th>
           <th className="num">QTR OBLIG.</th><th className="num">Δ VS BASE</th>
           <th className="num">HIST. HIT</th>
         </tr>
@@ -41,6 +42,11 @@ export default function PicksBoard({ rows, side, thesis, news }) {
                 <td style={{ width: 70 }}>
                   <span className={`zbar ${fade ? 'neg' : ''}`} style={{ width }} />
                 </td>
+                <td className="num" style={{ fontWeight: 700 }}>
+                  {r.materiality != null
+                    ? `${(r.materiality * 100).toFixed(1)}% of rev`
+                    : <span className="mut">no rev data</span>}
+                </td>
                 <td className="num">{fmtB(r.obligations)}</td>
                 <td className="num" style={{ color: r.delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
                   {r.delta >= 0 ? '+' : '−'}{fmtB(Math.abs(r.delta)).slice(1)}
@@ -51,7 +57,7 @@ export default function PicksBoard({ rows, side, thesis, news }) {
               </tr>
               {isOpen && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={9}>
                     <div className={`expand ${fade ? 'fade' : ''}`}>
                       {t ? (
                         <>

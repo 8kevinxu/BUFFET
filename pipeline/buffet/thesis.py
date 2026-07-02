@@ -48,6 +48,10 @@ def _facts(pick, headlines, side):
                      f"{t['mean_excess']:+.1%}")
     else:
         lines.append("No historical signal track record for this ticker.")
+    if pick.get("_drivers"):
+        lines.append("Largest actual awards behind the surge quarter:")
+        for a in pick["_drivers"][:3]:
+            lines.append(f"- ${(a['amount'] or 0)/1e6:,.0f}M {a['agency']}: {a['desc'] or a['award_id']}")
     if headlines:
         lines.append("Recent headlines:")
         lines.extend(f"- {h['title']}" for h in headlines[:8])
@@ -66,6 +70,14 @@ def run():
         news = json.loads((config.DERIVED_DIR / "news.json").read_text())
     except FileNotFoundError:
         news = {}
+    try:
+        drivers = json.loads((config.DERIVED_DIR / "awards.json").read_text())["drivers"]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        drivers = {}
+    for row in picks["picks"] + picks["fades"]:
+        d = drivers.get(row["ticker"])
+        if d and d["quarter_end"] == row["quarter_end"]:
+            row["_drivers"] = d["rows"]
 
     out_path = config.DERIVED_DIR / "thesis.json"
     try:

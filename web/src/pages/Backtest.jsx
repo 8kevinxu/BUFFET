@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  CartesianGrid, ReferenceArea, ReferenceLine, ResponsiveContainer,
-  Scatter, ScatterChart, Tooltip, XAxis, YAxis,
+  CartesianGrid, Legend, Line, LineChart, ReferenceArea, ReferenceLine,
+  ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import { useData, fmtB, fmtPct } from '../useData.js'
 
@@ -102,6 +102,60 @@ function SignalCard({ sig, window }) {
   )
 }
 
+function PortfolioPanel() {
+  const p = useData('portfolio')
+  if (!p || p.__error) return null
+  const s = p.stats
+  const tiles = [
+    ['STRATEGY', s.strategy, 'var(--green)'],
+    ['SPY', s.spy, 'var(--ink-2)'],
+    ['SECTOR BASKET', s.sector, 'var(--cyan)'],
+  ]
+  return (
+    <div className="panel">
+      <h2><span className="accent">§</span> AS A PORTFOLIO — equal-weight active signals, monthly rebalance, ~6-mo holds, 10bps costs</h2>
+      <div className="tiles">
+        {tiles.map(([label, st, color]) => (
+          <div className="tile" key={label}>
+            <div className="label">{label}</div>
+            <div className="value" style={{ color }}>{fmtPct(st.ann_return)}/yr</div>
+            <div className="sub">sharpe {st.sharpe} · max DD {fmtPct(st.max_drawdown, 0)}</div>
+          </div>
+        ))}
+        <div className="tile">
+          <div className="label">EXPOSURE</div>
+          <div className="value">{p.avg_positions}</div>
+          <div className="sub">avg positions · {p.months_invested}/{p.months} months invested</div>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={p.series} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
+          <CartesianGrid stroke="var(--grid)" />
+          <XAxis dataKey="month" stroke="var(--hairline)" minTickGap={40} />
+          <YAxis scale="log" domain={['auto', 'auto']} stroke="var(--hairline)"
+                 tickFormatter={(v) => `${v.toFixed(0)}x`} />
+          <Tooltip content={({ active, payload, label }) => {
+            if (!active || !payload?.length) return null
+            const d = payload[0].payload
+            return (
+              <div className="chart-tooltip">
+                <b>{label}</b> · {d.n} positions<br />
+                strategy {d.eq.toFixed(2)}x · SPY {d.eq_spy.toFixed(2)}x · sector {d.eq_sector.toFixed(2)}x
+              </div>
+            )
+          }} />
+          {/* validated dark-surface series colors; legend + direct labels carry identity */}
+          <Line dataKey="eq" name="strategy" stroke="var(--chart-green)" dot={false} strokeWidth={2} />
+          <Line dataKey="eq_spy" name="SPY" stroke="var(--ink-3)" dot={false} strokeWidth={2} />
+          <Line dataKey="eq_sector" name="sector basket" stroke="var(--chart-cyan)" dot={false} strokeWidth={2} />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+        </LineChart>
+      </ResponsiveContainer>
+      <p className="mut" style={{ fontSize: 11 }}>{p.note} Log scale.</p>
+    </div>
+  )
+}
+
 export default function Backtest() {
   const backtest = useData('backtest')
   const [win, setWin] = useState('126')
@@ -130,7 +184,9 @@ export default function Backtest() {
   const fades = rows.filter((r) => r.fired === 'fade')
 
   return (
-    <div className="panel" style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 16 }}>
+    <PortfolioPanel />
+    <div className="panel">
       <h2><span className="accent">◈</span> BACKTEST — every historical signal and what happened next</h2>
       <div className="toggles">
         {Object.entries(WINDOWS).map(([w, label]) => (
@@ -149,6 +205,37 @@ export default function Backtest() {
       </div>
 
       <Tiles agg={agg} />
+
+      <div style={{ margin: '4px 0 14px' }}>
+        <div className="mut" style={{ fontSize: 10, letterSpacing: 1, marginBottom: 4 }}>
+          WHY THE MATERIALITY GATE — {WINDOWS[win].toLowerCase()} excess of ungated LONG signals,
+          by surge size as a share of annual revenue:
+        </div>
+        <table className="board" style={{ maxWidth: 640 }}>
+          <thead>
+            <tr><th>SURGE / REVENUE</th><th className="num">N</th><th className="num">HIT</th><th className="num">MEAN EXCESS</th><th className="num">95% CI</th></tr>
+          </thead>
+          <tbody>
+            {Object.entries(backtest.aggregates[win].materiality ?? {}).map(([b, agg2]) => {
+              const a = agg2?.buy
+              if (!a?.n) return <tr key={b}><td>{b}</td><td className="num mut" colSpan={4}>n=0</td></tr>
+              return (
+                <tr key={b}>
+                  <td>{b}{b === '<0.5%' && <span className="mut"> (gated out)</span>}</td>
+                  <td className="num">{a.n}</td>
+                  <td className="num">{Math.round(a.hit_rate * 100)}%</td>
+                  <td className="num" style={{ color: a.mean_excess >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                    {fmtPct(a.mean_excess)}
+                  </td>
+                  <td className="num mut">
+                    {a.ci95 ? `[${fmtPct(a.ci95[0])}, ${fmtPct(a.ci95[1])}]` : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <ResponsiveContainer width="100%" height={380}>
         <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
@@ -187,6 +274,7 @@ export default function Backtest() {
       </div>
 
       <SignalCard sig={selected} window={win} />
+    </div>
     </div>
   )
 }

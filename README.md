@@ -3,8 +3,14 @@
 **Federal spending → stock signals.** A personal research agent that scrapes US
 government contract obligations (USAspending.gov, FY2008→present), cross-references
 spending surges with stock returns of ~60 publicly traded federal contractors,
-backtests the resulting signal, applies it to the newest quarter to rank "best
-stock to buy now," and renders everything in a hacker-terminal dashboard.
+backtests the resulting signal (per-event and as a costed portfolio), applies it
+to the newest quarter to rank "best stock to buy now," and renders everything in
+a hacker-terminal dashboard. Surges are **materiality-weighted** (relative to
+each company's SEC-reported revenue), the recipient matching is **audited for
+contamination** every refresh (over-contaminated tickers are quarantined from
+picks), projections carry **P10–P90 uncertainty bands**, and a **paper ledger**
+freezes each quarter's picks with real entry prices so the strategy accumulates
+a live out-of-sample record that can't be backtest-gamed.
 
 > ⚠ **Research/education tool. Not financial advice.** The backtest has
 > survivorship bias, small N, and revision risk — the UI discloses all of it.
@@ -59,6 +65,13 @@ gracefully and the UI shows a `THESIS STALE` tag.
 8. **`thesis`** — Claude writes the pick narratives (cached by input hash).
 9. **`publish`** — schema/row-count-validated JSON into `web/public/data/`
    (committed, so the static site deploys with zero build-time fetching).
+
+Later stages: `audit_recipients` (measures per-ticker series contamination on
+the live API and publishes it; >25% ⇒ quarantined from picks), `fetch_fundamentals`
+(SEC EDGAR revenue for materiality), `portfolio` (monthly-rebalanced costed
+simulation vs SPY and sector ETFs), `ledger` (freezes picks into `data/ledger.json`,
+committed), `awards` (transaction drill-downs: what drove each surge + a live
+feed of the last 60 days).
 
 Run one stage: `cd pipeline && ../.venv/bin/python -m buffet.refresh --stage rank`
 

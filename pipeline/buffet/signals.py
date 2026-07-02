@@ -37,7 +37,17 @@ def _quarter_ends(first, last):
     return ends
 
 
-def _series_rows(series, name, history_starts, today):
+def _revenue_asof(revenue_rows, knowledge_date):
+    """Latest annual revenue whose 10-K was FILED on or before the knowledge
+    date — point-in-time, so the backtest can't peek at unreported revenue."""
+    best = None
+    for _end, filed, val in revenue_rows or []:
+        if filed <= knowledge_date and (best is None or filed > best[0]):
+            best = (filed, val)
+    return best[1] if best else None
+
+
+def _series_rows(series, name, history_starts, today, revenue_rows=None):
     """Compute signal rows for one quarterly obligations series."""
     if not series:
         return []
@@ -65,13 +75,26 @@ def _series_rows(series, name, history_starts, today):
         sd = statistics.stdev(window)
         trailing4 = sum(values[max(0, i - 3):i + 1])
         z = (v - mu) / sd if sd > 0 else None
-        fired = None
+        kdate = qend + dt.timedelta(days=config.KNOWLEDGE_LAG_DAYS)
+
+        revenue = _revenue_asof(revenue_rows, kdate.isoformat())
+        materiality = round((v - mu) / revenue, 5) if revenue else None
+
+        fired_ungated = None
         if z is not None and trailing4 >= config.DOLLAR_FLOOR:
             if z >= config.Z_BUY:
-                fired = "buy"
+                fired_ungated = "buy"
             elif z <= config.Z_FADE:
-                fired = "fade"
-        kdate = qend + dt.timedelta(days=config.KNOWLEDGE_LAG_DAYS)
+                fired_ungated = "fade"
+        # primary rule adds the materiality gate when revenue is knowable;
+        # the ungated variant is kept so the backtest can compare the two
+        fired = fired_ungated
+        if fired and materiality is not None:
+            if fired == "buy" and materiality < config.MATERIALITY_MIN:
+                fired = None
+            elif fired == "fade" and materiality > -config.MATERIALITY_MIN:
+                fired = None
+
         rows.append({
             "id": name,
             "quarter_end": qend.isoformat(),
@@ -79,7 +102,10 @@ def _series_rows(series, name, history_starts, today):
             "trailing_mean": round(mu, 2),
             "trailing4": round(trailing4, 2),
             "z": round(z, 3) if z is not None else None,
+            "materiality": materiality,
+            "revenue": revenue,
             "fired": fired,
+            "fired_ungated": fired_ungated,
             "knowledge_date": kdate.isoformat(),
             "provisional": kdate > today,
         })
@@ -91,11 +117,17 @@ def run():
     recipients = mapping.load_recipients()
     sectors = {s["sector_id"]: s for s in mapping.load_sectors()}
     today = dt.date.today()
+    try:
+        revenue = json.loads((config.DERIVED_DIR / "fundamentals.json").read_text())["revenue"]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        revenue = {}
+        print("  [signals] no fundamentals.json — materiality gate disabled")
 
     ticker_rows = []
     for ticker, series in spending["tickers"].items():
         info = recipients.get(ticker, {})
-        ticker_rows.extend(_series_rows(series, ticker, info.get("history_starts"), today))
+        ticker_rows.extend(_series_rows(series, ticker, info.get("history_starts"),
+                                        today, revenue.get(ticker)))
 
     sector_rows = []
     for sid, series in spending["sectors"].items():

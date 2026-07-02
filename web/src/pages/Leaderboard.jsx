@@ -25,6 +25,16 @@ function Row({ r, i, rank1total, parent, open, onToggle }) {
         <td className="num" style={{ color: pos ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
           {fmtPct(r.total)}
         </td>
+        <td className="num mut" title={r.band?.pooled
+          ? 'P10–P90 of historical outcomes over this horizon (universe pool — this ticker is too young)'
+          : "P10–P90 of this ticker's own historical rolling-window outcomes, centered on the projection"}>
+          {r.band
+            ? <><span style={{ color: 'var(--red)' }}>{fmtPct(r.band.p10, 0)}</span>
+                {' … '}
+                <span style={{ color: 'var(--green)' }}>{fmtPct(r.band.p90, 0)}</span>
+                {r.band.pooled && '*'}</>
+            : '—'}
+        </td>
         <td className="num">{fmtPct(r.annualized)}/yr</td>
         <td>
           {r.capped && <span className="tag warn" title="hit the model's per-horizon ceiling">CAP</span>}
@@ -44,7 +54,7 @@ function Row({ r, i, rank1total, parent, open, onToggle }) {
       </tr>
       {open && (
         <tr>
-          <td colSpan={7}>
+          <td colSpan={8}>
             <div className="expand">
               <b>How this number is built</b> — annualized {fmtPct(r.annualized)} =
               {' '}{Math.round(c.w_hist * 100)}% × own trailing return ({fmtPct(c.hist_cagr)}/yr
@@ -90,6 +100,7 @@ export default function Leaderboard() {
           <tr>
             <th>#</th><th>TICKER</th><th>COMPANY</th><th></th>
             <th className="num">PROJ. {hz.toUpperCase()} GROWTH</th>
+            <th className="num">P10 … P90</th>
             <th className="num">ANNUALIZED</th><th>FLAGS</th>
           </tr>
         </thead>
@@ -103,7 +114,9 @@ export default function Leaderboard() {
         </tbody>
       </table>
       <p className="mut" style={{ fontSize: 11, marginTop: 10 }}>
-        {growth.caveat} Click a row to see how its number is built.
+        {growth.caveat} P10…P90 = the historical spread of {hz} outcomes centered on the
+        projection (* = universe pool, ticker too young). Click a row to see how its
+        number is built.
       </p>
     </div>
   )

@@ -29,6 +29,16 @@ def run():
     backtest = _load("backtest")
     picks = _load("picks")
     growth = _load("growth")
+    portfolio = _load("portfolio")
+    try:
+        audit = _load("recipient_audit")
+    except FileNotFoundError:
+        audit = {}
+    try:
+        awards = _load("awards")
+    except FileNotFoundError:
+        awards = {"drivers": {}, "recent": {}}
+    ledger = _load("ledger")
     try:
         news = _load("news")
     except FileNotFoundError:
@@ -54,6 +64,7 @@ def run():
         "picks nonempty": len(picks["picks"]) > 0,
         "growth horizons complete": all(len(growth["horizons"].get(h, [])) >= 40
                                         for h in ("6m", "1y", "5y", "20y")),
+        "portfolio history >= 100 months": portfolio["months"] >= 100,
     }
     failed = [k for k, ok in checks.items() if not ok]
     if failed:
@@ -82,6 +93,10 @@ def run():
     _atomic_write(web / "backtest.json", backtest)
     _atomic_write(web / "picks.json", picks)
     _atomic_write(web / "growth.json", growth)
+    _atomic_write(web / "portfolio.json", portfolio)
+    _atomic_write(web / "audit.json", audit)
+    _atomic_write(web / "awards.json", awards)
+    _atomic_write(web / "ledger.json", ledger)
     _atomic_write(web / "news.json", news)
     _atomic_write(web / "thesis.json", thesis)
     _atomic_write(web / "quotes.json", quotes)

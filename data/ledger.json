@@ -1,0 +1,43 @@
+{
+ "cohorts": [
+  {
+   "quarter_end": "2026-03-31",
+   "frozen_on": "2026-07-02",
+   "provisional_at_freeze": true,
+   "picks": [
+    {
+     "ticker": "FLR",
+     "z": 2.282,
+     "materiality": 0.12224,
+     "entry_date": "2026-07-01",
+     "entry_price": 50.35
+    },
+    {
+     "ticker": "PLTR",
+     "z": 3.016,
+     "materiality": 0.08677,
+     "entry_date": "2026-07-01",
+     "entry_price": 125.73
+    },
+    {
+     "ticker": "HON",
+     "z": 2.823,
+     "materiality": 0.05725,
+     "entry_date": "2026-07-01",
+     "entry_price": 221.75
+    },
+    {
+     "ticker": "GE",
+     "z": 1.889,
+     "materiality": 0.01414,
+     "entry_date": "2026-07-01",
+     "entry_price": 374.94
+    }
+   ],
+   "spy_entry": {
+    "date": "2026-07-01",
+    "price": 745.76
+   }
+  }
+ ]
+}

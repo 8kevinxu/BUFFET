@@ -27,6 +27,40 @@ function SectorPulse({ sectors }) {
   )
 }
 
+function LiveAwards({ awards }) {
+  if (!awards || awards.__error) return null
+  const rows = Object.entries(awards.recent ?? {})
+    .flatMap(([t, list]) => list.map((a) => ({ ...a, ticker: t })))
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || (b.amount ?? 0) - (a.amount ?? 0))
+    .slice(0, 12)
+  if (!rows.length) return null
+  return (
+    <div className="panel">
+      <h2><span className="accent">◉</span> LIVE AWARDS — largest transactions of the last 60 days, picked tickers
+        <span className="mut" style={{ fontWeight: 400, letterSpacing: 0 }}>
+          {' '}(civilian awards post in weeks; DoD after its 90-day embargo)
+        </span>
+      </h2>
+      <table className="board">
+        <thead><tr><th>DATE</th><th>TICKER</th><th className="num">AMOUNT</th><th>AGENCY</th><th>WHAT</th></tr></thead>
+        <tbody>
+          {rows.map((a, i) => (
+            <tr key={i}>
+              <td className="mut">{a.date}</td>
+              <td><span className="tick">{a.ticker}</span></td>
+              <td className="num">{fmtB(a.amount ?? 0)}</td>
+              <td className="mut">{a.agency}</td>
+              <td className="mut" style={{ maxWidth: 380, fontSize: 11 }}>
+                {(a.desc || a.award_id || '').toLowerCase()}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function NewsRail({ news, picks }) {
   const order = [...(picks?.picks ?? []), ...(picks?.fades ?? [])].map((r) => r.ticker)
   const items = order.flatMap((t) =>
@@ -50,6 +84,7 @@ export default function Dashboard() {
   const picks = useData('picks')
   const thesis = useData('thesis')
   const news = useData('news')
+  const awards = useData('awards')
 
   if (!picks) return <div className="loading">LOADING FEED…</div>
   if (picks.__error) {
@@ -70,6 +105,7 @@ export default function Dashboard() {
           <h2><span className="accent" style={{ color: 'var(--red)' }}>▼</span> FADE SIGNALS — spending collapse</h2>
           <PicksBoard rows={picks.fades} side="fade" thesis={thesis} news={news} />
         </div>
+        <LiveAwards awards={awards} />
         <SectorPulse sectors={picks.sectors} />
       </div>
       <NewsRail news={news} picks={picks} />

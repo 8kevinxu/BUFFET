@@ -34,6 +34,20 @@ def load_recipients():
     return tickers
 
 
+def load_overrides():
+    """Curated include/exclude verdicts for recipient names the automatic
+    word-boundary rule gets wrong (parent-linked subsidiaries, GOCO pass-
+    throughs, cross-company fuzz). Returns {ticker: [(name_contains, verdict)]}."""
+    path = config.MAPPING_DIR / "recipient_overrides.csv"
+    out = defaultdict(list)
+    if path.exists():
+        with open(path, newline="") as f:
+            for row in csv.DictReader(f):
+                out[row["ticker"].strip().upper()].append(
+                    (row["name_contains"].strip().upper(), row["verdict"].strip()))
+    return out
+
+
 def load_sectors():
     """Returns [{sector_id, agency, etf, label}]"""
     path = config.MAPPING_DIR / "sectors.csv"
@@ -45,5 +59,6 @@ def load_sectors():
 
 
 def all_price_symbols(recipients, sectors):
-    syms = set(recipients) | {s["etf"] for s in sectors} | {config.BENCHMARK}
+    syms = (set(recipients) | {s["etf"] for s in sectors}
+            | {config.BENCHMARK} | set(config.EXTRA_BENCHMARKS))
     return sorted(syms)

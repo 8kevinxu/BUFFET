@@ -39,6 +39,34 @@ def _cagr(rows, lookback_years, today):
     return (p1 / p0) ** (1 / years) - 1, years
 
 
+WINDOW_STEP = 21  # trading days between rolling-window starts
+
+
+def _window_anns(rows, years):
+    """Annualized returns of all rolling windows of `years` length in this
+    ticker's own history — the raw material for the uncertainty band."""
+    n_days = round(years * 252)
+    if len(rows) < n_days + WINDOW_STEP:
+        return []
+    out = []
+    for i in range(0, len(rows) - n_days, WINDOW_STEP):
+        p0, p1 = rows[i][1], rows[i + n_days][1]
+        if p0 > 0:
+            out.append((p1 / p0) ** (1 / years) - 1)
+    return out
+
+
+def _deviations(anns):
+    """Centered spread of window outcomes (P10/P90 offsets from the median)."""
+    if len(anns) < 24:
+        return None
+    s = sorted(anns)
+    med = s[len(s) // 2]
+    p10 = s[max(0, round(0.10 * (len(s) - 1)))]
+    p90 = s[min(len(s) - 1, round(0.90 * (len(s) - 1)))]
+    return p10 - med, p90 - med
+
+
 def _spending_tilt(series, rank_q):
     """Damped 3y CAGR of trailing-4q obligations ending at the ranking quarter."""
     if not series:
@@ -76,6 +104,14 @@ def run():
                       "Not a forecast; not financial advice.")}
 
     for hz, cfg in config.GROWTH_HORIZONS.items():
+        # pooled uncertainty for tickers whose history can't produce enough
+        # rolling windows of this length (e.g. PLTR at the 20y horizon)
+        pooled = []
+        for ticker in spending["tickers"]:
+            if ticker in prices and ticker != config.BENCHMARK:
+                pooled.extend(_window_anns(prices[ticker], cfg["years"]))
+        pooled_dev = _deviations(pooled)
+
         rows = []
         for ticker in spending["tickers"]:
             if ticker not in prices or ticker == config.BENCHMARK:
@@ -102,7 +138,23 @@ def run():
             lo, hi = cfg["clamp"]
             ann = max(lo, min(hi, raw_ann))
             total = (1 + ann) ** cfg["years"] - 1
+
+            # uncertainty band: the ticker's own rolling-window outcome spread
+            # (pooled universe spread when its history is too short), centered
+            # on the model projection
+            own_dev = _deviations(_window_anns(prices[ticker], cfg["years"]))
+            dev = own_dev or pooled_dev
+            band = None
+            if dev:
+                p10_ann = max(-0.95, ann + dev[0])
+                p90_ann = ann + dev[1]
+                band = {
+                    "p10": round((1 + p10_ann) ** cfg["years"] - 1, 4),
+                    "p90": round((1 + p90_ann) ** cfg["years"] - 1, 4),
+                    "pooled": own_dev is None,
+                }
             rows.append({
+                "band": band,
                 "ticker": ticker,
                 "annualized": round(ann, 4),
                 "total": round(total, 4),

@@ -67,10 +67,10 @@ def _era(kdate):
     return "2022-now"
 
 
-def _outcome_rows(signal_rows, book, symbol_of):
+def _outcome_rows(signal_rows, book, symbol_of, fired_key="fired"):
     rows = []
     for s in signal_rows:
-        if not s["fired"] or s["provisional"]:
+        if not s.get(fired_key) or s["provisional"]:
             continue
         sym = symbol_of(s)
         entry_idx = book.entry_index(sym, s["knowledge_date"])
@@ -92,8 +92,9 @@ def _outcome_rows(signal_rows, book, symbol_of):
                 "exit_date": exit_date,
             }
         rows.append({
-            **{k: s[k] for k in ("id", "quarter_end", "z", "fired",
-                                 "knowledge_date", "obligations", "trailing_mean")},
+            **{k: s.get(k) for k in ("id", "quarter_end", "z", "materiality",
+                                     "knowledge_date", "obligations", "trailing_mean")},
+            "fired": s[fired_key],
             "symbol": sym,
             "entry_date": entry_date,
             "entry_price": entry_px,
@@ -145,18 +146,37 @@ def run():
     book = PriceBook(prices)
 
     ticker_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"])
+    ungated_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"],
+                                     fired_key="fired_ungated")
     sector_outcomes = _outcome_rows(signals["sectors"], book, lambda s: s["etf"])
+
+    # evidence for the materiality gate: excess return by surge-size bucket
+    # (share of annual revenue), among ungated buys with known revenue
+    def _bucket(m):
+        if m is None:
+            return None
+        if m < 0.005:
+            return "<0.5%"
+        if m < 0.02:
+            return "0.5-2%"
+        if m < 0.10:
+            return "2-10%"
+        return ">10%"
 
     aggregates = {}
     for w in config.FORWARD_WINDOWS:
         w = str(w)
         aggregates[w] = {
             "all": _aggregate(ticker_outcomes, w),
+            "ungated": _aggregate(ungated_outcomes, w),
             "in_sample": _aggregate([r for r in ticker_outcomes if r["in_sample"]], w),
             "holdout": _aggregate([r for r in ticker_outcomes if not r["in_sample"]], w),
             "eras": {era: _aggregate([r for r in ticker_outcomes if r["era"] == era], w)
                      for era in ("2010-2013", "2014-2017", "2018-2021", "2022-now")},
             "sectors": _aggregate(sector_outcomes, w),
+            "materiality": {b: _aggregate([r for r in ungated_outcomes
+                                           if _bucket(r.get("materiality")) == b], w)
+                            for b in ("<0.5%", "0.5-2%", "2-10%", ">10%")},
         }
 
     # per-ticker track record at the 126d window

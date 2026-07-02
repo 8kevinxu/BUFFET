@@ -1,0 +1,53 @@
+ticker,name_contains,verdict,notes
+LMT,SIKORSKY,include,Lockheed sub since 2015 (parent-linked in USAspending)
+LDOS,QTC,include,Leidos health-exams sub
+LDOS,DYNETICS,include,Leidos sub since 2020
+BWXT,NUCLEAR FUEL SERVICES,include,BWXT sub
+OSK,PIERCE MANUFACTURING,include,Oshkosh sub
+OSK,JLG INDUSTRIES,include,Oshkosh sub
+JNJ,DEPUY,include,J&J sub
+JNJ,ETHICON,include,J&J sub
+CNC,MAGELLAN,include,Centene sub since 2022
+CNC,HEALTH NET,include,Centene TRICARE sub
+ELV,NATIONAL GOVERNMENT SERVICES,include,Elevance Medicare-admin sub
+LHX,AEROJET,include,L3Harris sub since 2023
+BAH,LIBERTY IT,include,Booz Allen sub since 2021
+AVAV,BLUEHALO,include,AeroVironment sub since 2025
+MRCY,PHYSICAL OPTICS,include,Mercury sub since 2021
+KTOS,FLORIDA TURBINE,include,Kratos Turbine Technologies
+EBS,EMERGENT PRODUCT,include,Emergent BioSolutions sub
+AMTM,PAE,include,Amentum sub
+SAIC,FORFEITURE SUPPORT,include,SAIC-owned FSA LLC
+CSCO,DUO SECURITY,include,Cisco sub since 2018
+CSCO,SPLUNK,include,Cisco sub since 2024
+DELL,EMC,include,Dell sub since 2016
+J,CH2M,include,Jacobs sub since 2017
+KBR,KELLOGG BROWN,include,KBR legal name
+TMO,LIFE TECHNOLOGIES,include,Thermo Fisher sub since 2014
+TDG,ARMTEC,include,TransDigm sub
+HON,NATIONAL TECHNOLOGY & ENGINEERING SOLUTIONS,include,NTESS runs Sandia for Honeywell — GOCO pass-through; inflates HON materiality (documented limitation)
+HON,HONEYWELL FEDERAL MANUFACTURING,include,NNSA Kansas City GOCO — same pass-through caveat
+FLR,SAVANNAH RIVER,include,Fluor-led JV
+FLR,FLUOR MARINE PROPULSION,include,naval reactors GOCO
+GE,GE PRECISION HEALTHCARE,exclude,GEHC spun off Jan 2023 — no longer GE
+CAH,BIOSENSE,exclude,Biosense Webster is J&J not Cardinal Health
+PSN,XATOR,include,Parsons sub since 2022
+HII,HII MISSION,include,HII Mission Technologies (ex-Alion)
+HII,ALION SCIENCE,include,HII sub since 2021
+TDG,AIRBORNE SYSTEMS,include,TransDigm sub
+TMO,FEI COMPANY,include,Thermo Fisher sub since 2016
+TMO,PPD,include,Thermo Fisher sub since 2021
+TTEK,LS TECHNOLOGIES,include,Tetra Tech sub since 2024
+TXT,AIRBORNE TACTICAL,include,Textron ATAC
+VVX,ADVANTOR,include,V2X sub
+KTOS,MICRO SYSTEMS,include,Kratos sub
+MRCY,MERCURY MISSION,include,Mercury Systems entity
+JNJ,ABIOMED,include,J&J sub since 2022
+EBS,EMERGENT BIODEFENSE,include,Emergent BioSolutions entity
+J,AMENTUM,exclude,Jacobs CMS spun into Amentum 2024 — novated contracts still parent-linked to Jacobs (true contamination)
+CACI,CACI TECHNOLOGIES,include,CACI entity
+HII,HII FLEET,include,HII entity
+HII,HII UNMANNED,include,HII entity
+TDG,MASON ELECTRIC,include,TransDigm sub
+TMO,ONE LAMBDA,include,Thermo Fisher sub
+TTEK,ADVANCED MANAGEMENT TECHNOLOGY,include,Tetra Tech AMT
