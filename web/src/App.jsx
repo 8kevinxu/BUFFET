@@ -23,6 +23,11 @@ function StatusBar() {
       </span>
       <span>universe <b>{meta.universe_size}</b> tickers</span>
       {meta.thesis_stale && <span className="tag warn">THESIS STALE</span>}
+      {meta.announce_alerts > 0 && (
+        <span className="tag warn" title="material DoD contract announcements (≥0.5% of a ticker's annual revenue) — see EARLY SIGNALS on the terminal">
+          ⚡ {meta.announce_alerts} EARLY ALERTS
+        </span>
+      )}
       <span className="mut">run {meta.generated}</span>
     </div>
   )

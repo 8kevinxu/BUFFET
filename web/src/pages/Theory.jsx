@@ -1,5 +1,43 @@
 import { useData, fmtB } from '../useData.js'
 
+function SurvivorshipTable() {
+  const s = useData('survivorship')
+  if (!s || s.__error || !s.years?.length) return null
+  return (
+    <>
+      <p style={{ marginTop: 6 }}>
+        Instead of just disclosing it, we measure it: the share of each fiscal
+        year's top-100 contract dollars that the universe's patterns actually
+        match. The unmatched remainder is mostly states, universities, FFRDC
+        operators (MITRE, national labs) and private firms (General Atomics,
+        SpaceX, Sierra Nevada, Deloitte) — but any <i>decline</i> going back in
+        time is the survivorship gap the backtest can't see.
+      </p>
+      <table className="board" style={{ maxWidth: 700 }}>
+        <tbody>
+          <tr>
+            {s.years.map((y) => <td key={y.fy} className="num mut" style={{ fontSize: 10 }}>FY{String(y.fy).slice(2)}</td>)}
+          </tr>
+          <tr>
+            {s.years.map((y) => (
+              <td key={y.fy} className="num" style={{ color: y.coverage >= 0.7 ? 'var(--green)' : 'var(--amber)' }}>
+                {y.coverage != null ? `${Math.round(y.coverage * 100)}%` : '—'}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+      <p className="mut" style={{ fontSize: 11 }}>
+        Coverage is stable ({Math.round(Math.min(...s.years.slice(0, -1).map((y) => y.coverage ?? 1)) * 100)}–
+        {Math.round(Math.max(...s.years.map((y) => y.coverage ?? 0)) * 100)}% every full year), so the
+        universe isn't dramatically thinner in the early years — but individual
+        delisted losers remain invisible. This audit also caught two real gaps
+        (RTX's renamed parent entity, GD's NASSCO shipyard), since fixed.
+      </p>
+    </>
+  )
+}
+
 export default function Theory() {
   const meta = useData('meta')
   const backtest = useData('backtest')
@@ -32,9 +70,26 @@ export default function Theory() {
           denominators can't fire.
         </li>
         <li>
+          A LONG must also be <b>material</b>: the surge must be ≥ 0.5% of the
+          company's latest annual revenue knowable at the time (SEC EDGAR,
+          matched by filing date). Sub-0.5% surges backtest at a coin flip.
+        </li>
+        <li>
           Company names are matched to tickers with a hand-curated mapping
           (Lockheed appears under multiple legal entities; "Electric Boat" is
           General Dynamics), summed per ticker.
+        </li>
+        <li>
+          <b>Fades are retired.</b> Shorting spending collapses never beat
+          chance in-sample — collapses are mostly known contract completions,
+          already priced. Collapse rows are still shown, labeled informational.
+        </li>
+        <li>
+          <b>The early tier.</b> DoD announces every contract over ~$7.5M the
+          same day at war.gov — months before it reaches USAspending. The
+          dashboard's EARLY SIGNALS feed matches announcements to the universe
+          and flags material ones (≥0.5% of revenue). It's context, not a
+          backtested signal: the reachable archive is only ~3 months deep.
         </li>
       </ul>
 
@@ -64,6 +119,12 @@ export default function Theory() {
           Aggregates show bootstrap 95% confidence intervals; when a CI includes
           zero, the UI says so instead of hiding it.
         </li>
+        <li>
+          Two independence checks live on the BACKTEST page: a{' '}
+          <b>timing placebo</b> (random entry dates for the same tickers) and a{' '}
+          <b>Fama-French regression</b> of the portfolio's monthly returns
+          (is it alpha, or market/size/value beta?).
+        </li>
       </ul>
 
       <h3>WHY YOU SHOULD STILL BE SKEPTICAL</h3>
@@ -72,6 +133,7 @@ export default function Theory() {
           <b>Survivorship bias.</b>{' '}
           {backtest?.caveats?.survivorship ??
             'The universe was curated in 2026 from companies that are still public — losers that delisted are invisible, which especially flatters the fade side.'}
+          <SurvivorshipTable />
         </li>
         <li>
           <b>Revisions.</b>{' '}

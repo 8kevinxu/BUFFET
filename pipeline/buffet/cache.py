@@ -100,6 +100,33 @@ def post_json(url, body, **kw):
     return request_json("POST", url, json_body=body, **kw)
 
 
+def get_bytes(url, *, key, max_age_days=7.0, retries=3, headers=None):
+    """get_text for binary bodies (zip archives)."""
+    path = _cache_path(key).with_suffix(".bin")
+    if path.exists() and (time.time() - path.stat().st_mtime) <= max_age_days * 86400:
+        return path.read_bytes()
+
+    hdrs = {"User-Agent": config.USER_AGENT}
+    if headers:
+        hdrs.update(headers)
+    last_err = None
+    for attempt in range(retries):
+        _throttle(url)
+        try:
+            resp = requests.get(url, headers=hdrs, timeout=config.HTTP_TIMEOUT)
+            resp.raise_for_status()
+            tmp = path.with_suffix(".tmp")
+            tmp.write_bytes(resp.content)
+            tmp.replace(path)
+            return resp.content
+        except requests.RequestException as e:
+            last_err = e
+            time.sleep(2 ** attempt * 2)
+    if path.exists():
+        return path.read_bytes()
+    raise RuntimeError(f"fetch failed for {key}: {last_err}")
+
+
 def get_text(url, *, key, max_age_days=1.0, retries=3, headers=None):
     """Same contract as request_json but for non-JSON bodies (RSS XML)."""
     path = _cache_path(key)

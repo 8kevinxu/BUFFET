@@ -38,6 +38,14 @@ def run():
         awards = _load("awards")
     except FileNotFoundError:
         awards = {"drivers": {}, "recent": {}}
+    try:
+        survivorship = _load("survivorship")
+    except FileNotFoundError:
+        survivorship = {"years": [], "top_unmatched": []}
+    try:
+        announce = _load("announce")
+    except FileNotFoundError:
+        announce = {"awards": [], "n_alerts": 0, "days_covered": 0}
     ledger = _load("ledger")
     try:
         news = _load("news")
@@ -65,6 +73,10 @@ def run():
         "growth horizons complete": all(len(growth["horizons"].get(h, [])) >= 40
                                         for h in ("6m", "1y", "5y", "20y")),
         "portfolio history >= 100 months": portfolio["months"] >= 100,
+        "portfolio sweep present": len(portfolio.get("sweep", [])) >= 6,
+        # enrichment artifacts may be empty (blocked source) but not malformed
+        "survivorship well-formed": isinstance(survivorship.get("years"), list),
+        "announce well-formed": isinstance(announce.get("awards"), list),
     }
     failed = [k for k, ok in checks.items() if not ok]
     if failed:
@@ -96,6 +108,8 @@ def run():
     _atomic_write(web / "portfolio.json", portfolio)
     _atomic_write(web / "audit.json", audit)
     _atomic_write(web / "awards.json", awards)
+    _atomic_write(web / "survivorship.json", survivorship)
+    _atomic_write(web / "announce.json", announce)
     _atomic_write(web / "ledger.json", ledger)
     _atomic_write(web / "news.json", news)
     _atomic_write(web / "thesis.json", thesis)
@@ -110,6 +124,8 @@ def run():
         "ranking_quarter": picks["quarter_end"],
         "ranking_provisional": picks["provisional"],
         "thesis_stale": thesis.get("stale", False),
+        "announce_alerts": announce.get("n_alerts", 0),
+        "fades_retired": bool(picks.get("fades_retired")),
         "signal_config": {
             "zscore_window": config.ZSCORE_WINDOW, "z_buy": config.Z_BUY,
             "z_fade": config.Z_FADE, "dollar_floor": config.DOLLAR_FLOOR,

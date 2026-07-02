@@ -15,6 +15,7 @@ export default function PicksBoard({ rows, side, thesis, news }) {
           <th>#</th><th>TICKER</th><th>COMPANY</th>
           <th className="num">Z-SCORE</th><th></th>
           <th className="num" title="surge as a share of the company's latest annual revenue (SEC EDGAR)">MATERIALITY</th>
+          <th className="num" title="stock's move vs SPY from quarter end to today — how much of the surge the market has already priced. Backtest: buys stayed profitable across all run-up buckets.">RUN-UP</th>
           <th className="num">QTR OBLIG.</th><th className="num">Δ VS BASE</th>
           <th className="num">HIST. HIT</th>
         </tr>
@@ -47,6 +48,9 @@ export default function PicksBoard({ rows, side, thesis, news }) {
                     ? `${(r.materiality * 100).toFixed(1)}% of rev`
                     : <span className="mut">no rev data</span>}
                 </td>
+                <td className="num" style={{ color: (r.runup ?? 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {r.runup != null ? `${r.runup >= 0 ? '+' : ''}${(r.runup * 100).toFixed(0)}%` : <span className="mut">—</span>}
+                </td>
                 <td className="num">{fmtB(r.obligations)}</td>
                 <td className="num" style={{ color: r.delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
                   {r.delta >= 0 ? '+' : '−'}{fmtB(Math.abs(r.delta)).slice(1)}
@@ -57,7 +61,7 @@ export default function PicksBoard({ rows, side, thesis, news }) {
               </tr>
               {isOpen && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <div className={`expand ${fade ? 'fade' : ''}`}>
                       {t ? (
                         <>

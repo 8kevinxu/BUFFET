@@ -27,6 +27,48 @@ function SectorPulse({ sectors }) {
   )
 }
 
+function EarlySignals({ announce }) {
+  if (!announce || announce.__error || !announce.awards?.length) return null
+  const alerts = announce.awards.filter((a) => a.alert)
+  const rest = announce.awards.filter((a) => !a.alert).slice(0, 8 - Math.min(alerts.length, 8))
+  const rows = [...alerts.slice(0, 10), ...rest]
+  return (
+    <div className="panel">
+      <h2>
+        <span className="accent" style={{ color: 'var(--amber)' }}>⚡</span> EARLY SIGNALS — announced same-day, months before the obligations data
+        <span className="mut" style={{ fontWeight: 400, letterSpacing: 0 }}>
+          {' '}(DoD daily contract announcements, $7.5M+; announced value ≈ full ceiling. Context, not a backtested signal.)
+        </span>
+      </h2>
+      <table className="board">
+        <thead><tr><th>DATE</th><th>TICKER</th><th className="num">ANNOUNCED</th><th className="num" title="announced value as a share of latest annual revenue">% OF REV</th><th>WHAT</th></tr></thead>
+        <tbody>
+          {rows.map((a, i) => (
+            <tr key={i} style={a.alert ? { background: 'rgba(255,176,32,0.06)' } : undefined}>
+              <td className="mut">{a.date}</td>
+              <td>
+                <span className="tick">{a.ticker}</span>
+                {a.alert && <span className="tag warn" style={{ marginLeft: 6 }} title="announced value ≥ 0.5% of annual revenue — the materiality bar the backtested signal uses">MATERIAL</span>}
+              </td>
+              <td className="num">{fmtB(a.amount)}</td>
+              <td className="num" style={{ fontWeight: a.alert ? 700 : 400 }}>
+                {a.pct_revenue != null ? `${(a.pct_revenue * 100).toFixed(1)}%` : '—'}
+              </td>
+              <td className="mut" style={{ maxWidth: 420, fontSize: 11 }}>
+                {a.modification && <span className="mut">[mod] </span>}
+                {a.text.replace(/^[^,]+,\s*/, '').slice(0, 170).toLowerCase()}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mut" style={{ fontSize: 10, marginTop: 6 }}>
+        {announce.n_alerts} material announcements in the last {announce.days_covered} announcement days · source: {announce.source}
+      </p>
+    </div>
+  )
+}
+
 function LiveAwards({ awards }) {
   if (!awards || awards.__error) return null
   const rows = Object.entries(awards.recent ?? {})
@@ -85,6 +127,7 @@ export default function Dashboard() {
   const thesis = useData('thesis')
   const news = useData('news')
   const awards = useData('awards')
+  const announce = useData('announce')
 
   if (!picks) return <div className="loading">LOADING FEED…</div>
   if (picks.__error) {
@@ -101,8 +144,15 @@ export default function Dashboard() {
           </h2>
           <PicksBoard rows={picks.picks} side="buy" thesis={thesis} news={news} />
         </div>
+        <EarlySignals announce={announce} />
         <div className="panel">
-          <h2><span className="accent" style={{ color: 'var(--red)' }}>▼</span> FADE SIGNALS — spending collapse</h2>
+          <h2>
+            <span className="accent" style={{ color: 'var(--red)' }}>▼</span> SPENDING COLLAPSES — informational only
+            <span className="tag warn" style={{ marginLeft: 8 }}>FADES RETIRED</span>
+          </h2>
+          {picks.fades_retired && (
+            <p className="mut" style={{ fontSize: 11, marginBottom: 8 }}>{picks.fades_retired}</p>
+          )}
           <PicksBoard rows={picks.fades} side="fade" thesis={thesis} news={news} />
         </div>
         <LiveAwards awards={awards} />

@@ -14,6 +14,11 @@ from . import cache, config, mapping
 
 API = "https://api.usaspending.gov/api/v2/search/spending_over_time/"
 CONTRACT_CODES = ["A", "B", "C", "D"]
+# grants (02-05), direct payments (06/10), loans (07/08), insurance/other (09/11).
+# Verified 2026-07-02: BARDA-style COVID money was booked as CONTRACTS (Moderna
+# shows ~$0 here), but managed-care direct payments (UNH ~$112B in 2020H2) and
+# CHIPS-era assistance land in these codes — a separate stream worth watching.
+ASSISTANCE_CODES = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11"]
 
 
 def fiscal_quarter_end(fy, q):
@@ -41,6 +46,7 @@ def run(max_age_days=6.0):
     window = [{"start_date": config.SPENDING_START, "end_date": today}]
 
     by_ticker = {}
+    by_assist = {}
     for i, (ticker, info) in enumerate(sorted(recipients.items()), 1):
         filters = {
             "time_period": window,
@@ -49,6 +55,11 @@ def run(max_age_days=6.0):
         }
         print(f"  [{i}/{len(recipients)}] spending {ticker} ({len(info['patterns'])} patterns)")
         by_ticker[ticker] = _spending_series(filters, key=f"spend_{ticker}", max_age_days=max_age_days)
+        assist = _spending_series({**filters, "award_type_codes": ASSISTANCE_CODES},
+                                  key=f"assist_{ticker}", max_age_days=max_age_days)
+        # keep only series with real money — most contractors get none
+        if any(v >= 1e6 for v in assist.values()):
+            by_assist[ticker] = assist
 
     by_sector = {}
     for s in sectors:
@@ -65,7 +76,9 @@ def run(max_age_days=6.0):
     if nonempty < len(by_ticker) * 0.6:
         raise RuntimeError(f"only {nonempty}/{len(by_ticker)} tickers returned spending — source broken?")
 
-    out = {"tickers": by_ticker, "sectors": by_sector, "fetched": today}
+    out = {"tickers": by_ticker, "assistance": by_assist, "sectors": by_sector,
+           "fetched": today}
     (config.DERIVED_DIR / "spending.json").write_text(json.dumps(out))
-    print(f"  wrote spending for {len(by_ticker)} tickers, {len(by_sector)} sectors")
+    print(f"  wrote spending for {len(by_ticker)} tickers "
+          f"({len(by_assist)} with assistance), {len(by_sector)} sectors")
     return out

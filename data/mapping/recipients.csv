@@ -43,6 +43,7 @@ GD,BATH IRON WORKS,General Dynamics,defense,,destroyer shipyard
 GD,ELECTRIC BOAT,General Dynamics,defense,,submarine sub-entity
 GD,GENERAL DYNAMICS,General Dynamics,defense,,covers GDIT too
 GD,GULFSTREAM AEROSPACE,General Dynamics,defense,,
+GD,NATIONAL STEEL AND SHIPBUILDING,General Dynamics,defense,,NASSCO shipyard — found via survivorship audit ($19B unmatched)
 GE,GENERAL ELECTRIC,GE Aerospace,defense,,engines; GE split 2024 but ticker continuous
 HII,HUNTINGTON INGALLS,Huntington Ingalls,defense,2011-07-01,spun off from NOC Mar 2011
 HON,HONEYWELL,Honeywell,defense,,incl. Honeywell Federal Manufacturing (NNSA Kansas City)
@@ -92,6 +93,7 @@ RKLB,ROCKET LAB,Rocket Lab,space,2021-10-01,SPAC Aug 2021
 RTX,COLLINS AEROSPACE,RTX,defense,2020-07-01,
 RTX,PRATT & WHITNEY,RTX,defense,2020-07-01,
 RTX,RAYTHEON,RTX,defense,2020-07-01,RTN+UTC merged Apr 2020; ticker history pre-2020 is UTC's
+RTX,RTX CORPORATION,RTX,defense,2020-07-01,parent renamed RTX Corp Jul 2023 — pattern search misses renamed entities (~25% of recent quarters)
 SAIC,SCIENCE APPLICATIONS INTERNATIONAL,SAIC,it_services,2013-10-01,new SAIC IPO Sep 2013
 TDG,ARMTEC DEFENSE,TransDigm,defense,,sub
 TDG,TRANSDIGM,TransDigm,defense,,

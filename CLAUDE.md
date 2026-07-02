@@ -21,9 +21,9 @@ make build      # production build → web/dist
 
 # Run a single pipeline stage (they are idempotent and individually runnable):
 cd pipeline && ../.venv/bin/python -m buffet.refresh --stage <name>
-# stages, in order: fetch_spending, audit_recipients, fetch_prices,
-#   fetch_fundamentals, signals, backtest, portfolio, rank, growth, ledger,
-#   awards, news, thesis, publish
+# stages, in order: fetch_spending, audit_recipients, survivorship,
+#   fetch_prices, fetch_fundamentals, signals, backtest, portfolio, rank,
+#   growth, ledger, awards, announce, news, thesis, publish
 ```
 
 There is **no test suite or linter**. Verifying a change means: run the
@@ -55,7 +55,12 @@ the pipeline require it.
 - **Signal thresholds are pre-registered in `pipeline/buffet/config.py`.**
   Don't tune them against the post-2017 holdout. If you evaluate new
   parameterizations, report the comparison honestly (like the materiality
-  bucket table) rather than silently switching.
+  bucket table) rather than silently switching. Precedents to follow: the
+  seasonally-adjusted z (better in-sample, worse holdout — published, not
+  adopted) and the persistent-decline fade (works ONLY in the holdout —
+  adopting it would be holdout-tuning, so it's disclosure-only). Fades are
+  retired from the ranking on in-sample evidence; don't resurrect them
+  without in-sample support.
 - **Honesty in the UI.** Show N, show confidence intervals, say when a CI
   includes zero, label provisional data, keep the not-financial-advice banner.
 
@@ -84,6 +89,28 @@ the pipeline require it.
 - **Fiscal quarters:** USAspending returns fiscal year/quarter; FY Q1 ends
   Dec 31 of the prior calendar year. Conversion lives in
   `fetch_spending.fiscal_quarter_end` — reuse it.
+- **Renamed parents silently vanish from pattern search.** USAspending shows
+  recipients under their CURRENT legal name even for old awards, so when a
+  parent renames (Raytheon → RTX Corp, 2023) the old patterns stop matching
+  its entity — RTX's series was ~25% undercounted until `RTX CORPORATION`
+  was added (found 2026-07-02 by the survivorship stage's unmatched list;
+  same audit caught GD's NASSCO shipyard). When a universe company renames
+  or reorganizes, add the new name as a pattern.
+- **war.gov / defense.gov article pages are Akamai TLS-fingerprint-gated**:
+  curl/urllib get 403 even with a browser UA; only the RSS index
+  (`RSS.ashx?ContentType=400&Site=945`) is fetchable from Python. Article
+  bodies go through `web/scripts/fetch-page.mjs` (playwright-core + system
+  Chrome, real-UA context). Articles are immutable — cached forever in
+  `pipeline/data/raw/dod_article_*.txt`.
+- **USAspending IDV rows report `Award Amount` = $0** (money obligates on
+  later task orders) and the search API exposes no ceiling field — a
+  historical ceiling backtest isn't feasible with free structured data. The
+  announcement feed carries the ceiling instead (announced value ≈ full
+  contract value).
+- **HTTP cache keys don't include the request body** (`spend_<ticker>` etc.),
+  so after editing a ticker's patterns in `recipients.csv` you must delete
+  its cache entries (`pipeline/data/raw/spend_X* assist_X* contam_X*`) or the
+  old series will be served until the cache expires.
 
 ## Web app conventions
 

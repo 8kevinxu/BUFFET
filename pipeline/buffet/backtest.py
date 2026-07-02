@@ -92,8 +92,9 @@ def _outcome_rows(signal_rows, book, symbol_of, fired_key="fired"):
                 "exit_date": exit_date,
             }
         rows.append({
-            **{k: s.get(k) for k in ("id", "quarter_end", "z", "materiality",
-                                     "knowledge_date", "obligations", "trailing_mean")},
+            **{k: s.get(k) for k in ("id", "quarter_end", "z", "z_seas", "materiality",
+                                     "runup", "knowledge_date", "obligations",
+                                     "trailing_mean")},
             "fired": s[fired_key],
             "symbol": sym,
             "entry_date": entry_date,
@@ -140,6 +141,54 @@ def _aggregate(rows, window="126"):
     return out
 
 
+def _placebo(buy_rows, book, window=126, n_perm=2000):
+    """Permutation test of TIMING: keep the tickers and signal count fixed,
+    replace each real entry date with a random trading day from that ticker's
+    own backtestable history, and ask how often random timing matches the real
+    mean excess. Controls for ticker mix and era-long sector drift — what's
+    left is whether the signal's dates beat chance."""
+    real_vals = []
+    slots = []   # (symbol, lo_idx, hi_idx) valid random-entry index range
+    floor = "2010-01-01"
+    for r in buy_rows:
+        o = r["outcome"].get(str(window))
+        if not o or o["excess"] is None:
+            continue
+        real_vals.append(o["excess"])
+        sym = r["symbol"]
+        dates, _ = book.series[sym]
+        lo = bisect.bisect_left(dates, floor)
+        hi = len(dates) - window - 1
+        if hi > lo:
+            slots.append((sym, lo, hi))
+    if len(real_vals) < 20 or not slots:
+        return None
+    real_mean = float(np.mean(real_vals))
+    rng = random.Random(42)
+    perm_means = []
+    for _ in range(n_perm):
+        vals = []
+        for sym, lo, hi in slots:
+            i = rng.randint(lo, hi)
+            dates, px = book.series[sym]
+            ret = px[i + window] / px[i] - 1.0
+            bench = book.return_between(config.BENCHMARK, dates[i], dates[i + window])
+            if bench is not None:
+                vals.append(ret - bench)
+        if vals:
+            perm_means.append(float(np.mean(vals)))
+    perm_means = np.asarray(perm_means)
+    p = float((perm_means >= real_mean).mean())
+    return {
+        "n_signals": len(real_vals),
+        "n_perm": len(perm_means),
+        "real_mean_excess": round(real_mean, 4),
+        "perm_mean_excess": round(float(perm_means.mean()), 4),
+        "perm_p95": round(float(np.percentile(perm_means, 95)), 4),
+        "p_value": round(p, 4),
+    }
+
+
 def run():
     signals = json.loads((config.DERIVED_DIR / "signals.json").read_text())
     prices = json.loads((config.DERIVED_DIR / "prices.json").read_text())["prices"]
@@ -148,6 +197,12 @@ def run():
     ticker_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"])
     ungated_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"],
                                      fired_key="fired_ungated")
+    seasonal_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"],
+                                      fired_key="fired_seasonal")
+    fade2_outcomes = _outcome_rows(signals["tickers"], book, lambda s: s["id"],
+                                   fired_key="fired_fade2")
+    assistance_outcomes = _outcome_rows(signals.get("assistance", []), book,
+                                        lambda s: s["id"])
     sector_outcomes = _outcome_rows(signals["sectors"], book, lambda s: s["etf"])
 
     # evidence for the materiality gate: excess return by surge-size bucket
@@ -163,6 +218,22 @@ def run():
             return "2-10%"
         return ">10%"
 
+    # pre-entry run-up buckets: is a surge the market already chased still
+    # worth buying? (post-announcement-drift check)
+    def _runup_bucket(r):
+        v = r.get("runup")
+        if v is None:
+            return None
+        if v < -0.10:
+            return "<-10%"
+        if v < 0:
+            return "-10-0%"
+        if v < 0.10:
+            return "0-10%"
+        return ">10%"
+
+    RUNUP_BUCKETS = ("<-10%", "-10-0%", "0-10%", ">10%")
+
     aggregates = {}
     for w in config.FORWARD_WINDOWS:
         w = str(w)
@@ -177,7 +248,18 @@ def run():
             "materiality": {b: _aggregate([r for r in ungated_outcomes
                                            if _bucket(r.get("materiality")) == b], w)
                             for b in ("<0.5%", "0.5-2%", "2-10%", ">10%")},
+            "seasonal": _aggregate(seasonal_outcomes, w),
+            "seasonal_in_sample": _aggregate([r for r in seasonal_outcomes if r["in_sample"]], w),
+            "seasonal_holdout": _aggregate([r for r in seasonal_outcomes if not r["in_sample"]], w),
+            "fade2": _aggregate(fade2_outcomes, w),
+            "fade2_in_sample": _aggregate([r for r in fade2_outcomes if r["in_sample"]], w),
+            "fade2_holdout": _aggregate([r for r in fade2_outcomes if not r["in_sample"]], w),
+            "assistance": _aggregate(assistance_outcomes, w),
+            "runup": {b: _aggregate([r for r in ticker_outcomes if _runup_bucket(r) == b], w)
+                      for b in RUNUP_BUCKETS},
         }
+
+    placebo = _placebo([r for r in ticker_outcomes if r["fired"] == "buy"], book)
 
     # per-ticker track record at the 126d window
     track = {}
@@ -194,14 +276,23 @@ def run():
                  "mean_excess": round(v["sum_excess"] / v["n"], 4)}
              for k, v in track.items()}
 
-    print(f"  {len(ticker_outcomes)} ticker outcomes, {len(sector_outcomes)} sector outcomes")
+    print(f"  {len(ticker_outcomes)} ticker outcomes, {len(sector_outcomes)} sector outcomes, "
+          f"{len(assistance_outcomes)} assistance outcomes")
     a = aggregates["126"]["all"].get("buy", {})
     if a.get("n"):
         print(f"  buys @126d: n={a['n']} hit={a['hit_rate']:.0%} "
               f"mean excess={a['mean_excess']:+.1%} ci95={a['ci95']}")
+    s = aggregates["126"]["seasonal"].get("buy", {})
+    if s.get("n"):
+        print(f"  seasonal-z buys @126d: n={s['n']} hit={s['hit_rate']:.0%} "
+              f"mean excess={s['mean_excess']:+.1%}")
+    if placebo:
+        print(f"  placebo: real {placebo['real_mean_excess']:+.1%} vs perm "
+              f"{placebo['perm_mean_excess']:+.1%}, p={placebo['p_value']:.3f}")
 
     out = {"tickers": ticker_outcomes, "sectors": sector_outcomes,
-           "aggregates": aggregates, "track": track,
+           "assistance": assistance_outcomes,
+           "aggregates": aggregates, "track": track, "placebo": placebo,
            "train_end": config.TRAIN_END,
            "caveats": {
                "survivorship": "Universe curated in 2026 from today's public contractors; "

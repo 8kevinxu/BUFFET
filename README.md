@@ -12,6 +12,14 @@ picks), projections carry **P10–P90 uncertainty bands**, and a **paper ledger*
 freezes each quarter's picks with real entry prices so the strategy accumulates
 a live out-of-sample record that can't be backtest-gamed.
 
+On top of the quarterly signal: an **EARLY SIGNALS tier** scans DoD's same-day
+contract announcements (war.gov, $7.5M+) and alerts on awards ≥0.5% of a
+ticker's revenue — months before they reach USAspending; the edge is
+stress-tested with a **timing placebo** and a **Fama-French regression**
+(alpha ≈ +10.7%/yr, t≈2.9); survivorship bias is **measured per fiscal year**,
+not just disclosed; and the fade side is **retired** (it never worked
+in-sample — the UI says so instead of selling it).
+
 > ⚠ **Research/education tool. Not financial advice.** The backtest has
 > survivorship bias, small N, and revision risk — the UI discloses all of it.
 

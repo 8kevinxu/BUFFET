@@ -63,9 +63,19 @@ def run():
         return (r["fired"] != "fade", (r["materiality"] if r["materiality"] is not None else 1e9), r["z"])
 
     buys = sorted((r for r in rows if r["z"] > 0), key=buy_key)[:config.PICKS_N]
-    fades = sorted((r for r in rows if r["z"] < 0), key=fade_key)[:config.FADES_N]
     picks = [enrich(r) for r in buys]
+
+    # Fades are RETIRED from the ranking (2026-07-02): shorting spending
+    # declines never worked in-sample (33% hit, +5.4% excess — the wrong
+    # direction) and no conditioning variant (persistent decline, seasonal z)
+    # showed in-sample edge either. Candidates are still published for
+    # transparency, clearly labeled — the full evidence lives in the backtest.
+    fades = sorted((r for r in rows if r["z"] < 0), key=fade_key)[:config.FADES_N]
     fade_rows = [enrich(r) for r in fades]
+    fades_retired = ("Fading spending declines never beat chance in-sample "
+                     "(33% hit rate; faded names went on to OUTPERFORM by +5.4% "
+                     "on average). No conditioning variant fixed it without "
+                     "peeking at the holdout, so fades are informational only.")
 
     sector_rows = [
         {**r, "label": sectors[r["id"]]["label"], "etf": sectors[r["id"]]["etf"]}
@@ -81,6 +91,7 @@ def run():
     out = {"quarter_end": rank_q, "provisional": provisional,
            "generated": today.isoformat(),
            "quarantined": sorted(quarantined),
-           "picks": picks, "fades": fade_rows, "sectors": sector_rows}
+           "picks": picks, "fades": fade_rows, "fades_retired": fades_retired,
+           "sectors": sector_rows}
     (config.DERIVED_DIR / "picks.json").write_text(json.dumps(out))
     return out

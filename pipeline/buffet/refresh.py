@@ -6,13 +6,15 @@ tickers). News and thesis failures never fail the run; everything else does.
 import argparse
 import time
 
-from . import (audit_recipients, backtest, fetch_awards, fetch_fundamentals,
-               fetch_news, fetch_prices, fetch_spending, growth, ledger,
-               portfolio, publish, rank, signals, thesis)
+from . import (announce, audit_recipients, backtest, fetch_awards,
+               fetch_fundamentals, fetch_news, fetch_prices, fetch_spending,
+               growth, ledger, portfolio, publish, rank, signals, survivorship,
+               thesis)
 
 STAGES = [
     ("fetch_spending", fetch_spending.run, True),
     ("audit_recipients", audit_recipients.run, False),
+    ("survivorship", survivorship.run, False),
     ("fetch_prices", fetch_prices.run, True),
     # non-fatal: signals fall back to the un-gated rule without fundamentals
     ("fetch_fundamentals", fetch_fundamentals.run, False),
@@ -23,6 +25,7 @@ STAGES = [
     ("growth", growth.run, True),
     ("ledger", ledger.run, True),
     ("awards", fetch_awards.run, False),
+    ("announce", announce.run, False),
     ("news", fetch_news.run, False),
     ("thesis", thesis.run, False),
     ("publish", publish.run, True),

@@ -20,7 +20,7 @@ const CHART_OPTS = {
   crosshair: { mode: 0 },
 }
 
-function PriceChart({ ticker, prices, spendSeries, rows }) {
+function PriceChart({ ticker, prices, spendSeries, assistSeries, rows }) {
   const ref = useRef(null)
   useEffect(() => {
     if (!ref.current || !prices?.length) return
@@ -52,8 +52,27 @@ function PriceChart({ ticker, prices, spendSeries, rows }) {
     const spendRows = Object.entries(spendSeries ?? {})
       .filter(([d]) => d >= firstPrice)
       .sort(([a], [b]) => (a < b ? -1 : 1))
+    // assistance (grants / direct payments) gets its OWN strip below the
+    // obligations — UNH's Medicare direct payments are ~10x its contracts,
+    // so sharing a scale would flatten the contract bars to nothing
+    const hasAssist = assistSeries && Object.keys(assistSeries).length > 0
     oblig.setData(spendRows.map(([d, v]) => ({ time: d, value: v })))
-    chart.priceScale('oblig').applyOptions({ scaleMargins: { top: 0.72, bottom: 0 } })
+    chart.priceScale('oblig').applyOptions({
+      scaleMargins: hasAssist ? { top: 0.7, bottom: 0.14 } : { top: 0.72, bottom: 0 },
+    })
+    if (hasAssist) {
+      const assist = chart.addHistogramSeries({
+        color: '#b57708',
+        priceScaleId: 'assist',
+        priceFormat: { type: 'volume' },
+        title: 'quarterly assistance',
+      })
+      assist.setData(Object.entries(assistSeries)
+        .filter(([d, v]) => d >= firstPrice && v > 0)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([d, v]) => ({ time: d, value: v })))
+      chart.priceScale('assist').applyOptions({ scaleMargins: { top: 0.88, bottom: 0 } })
+    }
 
     // signal-fire markers at knowledge dates
     const markers = (rows ?? [])
@@ -72,7 +91,7 @@ function PriceChart({ ticker, prices, spendSeries, rows }) {
     chart.timeScale().fitContent()
     window.addEventListener('resize', onResize)
     return () => { window.removeEventListener('resize', onResize); chart.remove() }
-  }, [ticker, prices, spendSeries, rows])
+  }, [ticker, prices, spendSeries, assistSeries, rows])
   return <div ref={ref} />
 }
 
@@ -111,10 +130,14 @@ export default function Company() {
           {uni && <span className="mut"> — {uni.parent} · {uni.sector}</span>}
         </h2>
         <PriceChart ticker={ticker} prices={prices}
-                    spendSeries={spending.tickers?.[ticker]} rows={rows} />
+                    spendSeries={spending.tickers?.[ticker]}
+                    assistSeries={spending.assistance?.[ticker]} rows={rows} />
         <div className="mut" style={{ fontSize: 11, marginTop: 4 }}>
           <span style={{ color: '#1489a8' }}>—</span> adjusted close ·{' '}
           <span style={{ color: '#0fab68' }}>▮</span> quarterly federal contract obligations ·
+          {spending.assistance?.[ticker] && Object.keys(spending.assistance[ticker]).length > 0 && (
+            <> <span style={{ color: '#b57708' }}>▮</span> grants / direct payments ·</>
+          )}{' '}
           arrows mark signal knowledge dates (quarter end + 135 days)
         </div>
       </div>

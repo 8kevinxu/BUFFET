@@ -21,6 +21,16 @@ jobs:
       - name: Install pipeline
         run: pip install -e "pipeline[thesis]"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # playwright-core drives the runner's preinstalled Chrome for the
+      # announcement scanner (war.gov TLS-fingerprint-blocks plain clients);
+      # if Akamai blocks the runner IP the stage degrades non-fatally
+      - name: Install web deps (headless-Chrome fetcher)
+        run: npm ci --prefix web
+
       - name: Run pipeline
         working-directory: pipeline
         env:
@@ -40,4 +50,30 @@ jobs:
           else
             git commit -m "data: weekly refresh $(date -u +%F)"
             git push
+          fi
+
+      # alert delivery: one issue per run window when material announcements
+      # exist (>=0.5% of a ticker's revenue, from the DoD daily feed) — GitHub
+      # emails the issue, so alerts arrive without watching the dashboard
+      - name: Open issue for new material award alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'EOF' > alerts.md || exit 0
+          import json, datetime as dt
+          a = json.load(open("web/public/data/announce.json"))
+          cutoff = (dt.date.today() - dt.timedelta(days=8)).isoformat()
+          rows = [r for r in a.get("awards", []) if r.get("alert") and r["date"] >= cutoff]
+          if not rows:
+              raise SystemExit(1)
+          print(f"Material award announcements since {cutoff}:\n")
+          for r in rows:
+              print(f"- **{r['ticker']}** ${r['amount']/1e6:,.0f}M "
+                    f"({r['pct_revenue']:.1%} of revenue) {r['date']} — {r['text'][:180]}…")
+          EOF
+          if [ -s alerts.md ]; then
+            TITLE="Material award alerts — week of $(date -u +%F)"
+            if ! gh issue list --search "in:title \"$TITLE\"" --json title -q '.[].title' | grep -qF "$TITLE"; then
+              gh issue create --title "$TITLE" --body-file alerts.md
+            fi
           fi
