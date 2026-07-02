@@ -1,0 +1,6 @@
+sector_id,agency,etf,label
+dod,Department of Defense,ITA,Defense (DoD total → ITA aerospace & defense ETF)
+hhs,Department of Health and Human Services,XLV,Health (HHS total → XLV health care ETF)
+va,Department of Veterans Affairs,XLV,Veterans health (VA total → XLV health care ETF)
+nasa,National Aeronautics and Space Administration,ITA,Space (NASA total → ITA aerospace & defense ETF)
+doe,Department of Energy,XLE,Energy (DOE total → XLE energy ETF)

@@ -1,0 +1,77 @@
+ticker,pattern,parent_name,sector,history_starts,notes
+LMT,LOCKHEED MARTIN,Lockheed Martin,defense,,appears under multiple UEIs
+RTX,RAYTHEON,RTX,defense,2020-07-01,RTN+UTC merged Apr 2020; ticker history pre-2020 is UTC's
+RTX,COLLINS AEROSPACE,RTX,defense,2020-07-01,
+RTX,PRATT & WHITNEY,RTX,defense,2020-07-01,
+NOC,NORTHROP GRUMMAN,Northrop Grumman,defense,,
+GD,GENERAL DYNAMICS,General Dynamics,defense,,covers GDIT too
+GD,ELECTRIC BOAT,General Dynamics,defense,,submarine sub-entity
+GD,GULFSTREAM AEROSPACE,General Dynamics,defense,,
+GD,BATH IRON WORKS,General Dynamics,defense,,destroyer shipyard
+BA,BOEING,Boeing,defense,,
+HII,HUNTINGTON INGALLS,Huntington Ingalls,defense,2011-07-01,spun off from NOC Mar 2011
+LHX,L3HARRIS,L3Harris,defense,2019-10-01,HRS+LLL merged Jun 2019
+LHX,HARRIS CORPORATION,L3Harris,defense,2019-10-01,
+LHX,L3 TECHNOLOGIES,L3Harris,defense,2019-10-01,
+TXT,TEXTRON,Textron,defense,,covers Bell Textron
+GE,GENERAL ELECTRIC,GE Aerospace,defense,,engines; GE split 2024 but ticker continuous
+HON,HONEYWELL,Honeywell,defense,,incl. Honeywell Federal Manufacturing (NNSA Kansas City)
+LDOS,LEIDOS,Leidos,it_services,2013-10-01,renamed from old SAIC Sep 2013
+BAH,BOOZ ALLEN,Booz Allen Hamilton,it_services,2011-01-01,IPO Nov 2010
+SAIC,SCIENCE APPLICATIONS INTERNATIONAL,SAIC,it_services,2013-10-01,new SAIC IPO Sep 2013
+CACI,CACI,CACI,it_services,,
+KBR,KBR,KBR,engineering,,
+PSN,PARSONS,Parsons,engineering,2019-07-01,IPO May 2019
+VVX,VECTRUS,V2X,defense,2015-01-01,Vectrus IPO Sep 2014; V2X merger 2022
+VVX,V2X,V2X,defense,2015-01-01,
+AMTM,AMENTUM,Amentum,engineering,2025-01-01,listed Sep 2024
+AVAV,AEROVIRONMENT,AeroVironment,defense,,
+KTOS,KRATOS,Kratos,defense,,
+MRCY,MERCURY SYSTEMS,Mercury Systems,defense,,
+CW,CURTISS-WRIGHT,Curtiss-Wright,defense,,
+TDG,TRANSDIGM,TransDigm,defense,,
+OSK,OSHKOSH,Oshkosh,defense,,JLTV maker
+RKLB,ROCKET LAB,Rocket Lab,space,2021-10-01,SPAC Aug 2021
+BWXT,BWX TECHNOLOGIES,BWX Technologies,defense,2015-07-01,spun from Babcock & Wilcox 2015
+BWXT,BWXT,BWX Technologies,defense,2015-07-01,
+BAESY,BAE SYSTEMS,BAE Systems (ADR),defense,,US OTC ADR
+MSFT,MICROSOFT,Microsoft,it_services,,
+ORCL,ORACLE,Oracle,it_services,,
+IBM,INTERNATIONAL BUSINESS MACHINES,IBM,it_services,,
+DELL,DELL,Dell,it_services,2019-01-01,relisted Dec 2018
+HPE,HEWLETT PACKARD ENTERPRISE,HPE,it_services,2016-01-01,split from HP Nov 2015
+ACN,ACCENTURE,Accenture,it_services,,Accenture Federal Services
+PLTR,PALANTIR,Palantir,it_services,2021-01-01,IPO Sep 2020
+CSCO,CISCO,Cisco,it_services,,
+AMZN,AMAZON,Amazon,it_services,,AWS GovCloud contracts
+MSI,MOTOROLA SOLUTIONS,Motorola Solutions,it_services,,
+UNH,UNITEDHEALTH,UnitedHealth,health,,
+UNH,OPTUM,UnitedHealth,health,,TRICARE etc.
+CVS,CVS,CVS Health,health,,
+CVS,AETNA,CVS Health,health,,acquired 2018; pattern also matches pre-2018 standalone Aetna awards
+ELV,ELEVANCE,Elevance Health,health,,ANTM renamed 2022; ticker history continuous
+ELV,ANTHEM,Elevance Health,health,,
+HUM,HUMANA,Humana,health,,Humana Government Business
+CNC,CENTENE,Centene,health,,
+MCK,MCKESSON,McKesson,health,,vaccine distribution
+COR,AMERISOURCEBERGEN,Cencora,health,,renamed 2023; ticker history continuous
+COR,CENCORA,Cencora,health,,
+CAH,CARDINAL HEALTH,Cardinal Health,health,,
+PFE,PFIZER,Pfizer,health,,
+MRK,MERCK,Merck,health,,
+MRNA,MODERNA,Moderna,health,2019-01-01,IPO Dec 2018
+JNJ,JOHNSON & JOHNSON,Johnson & Johnson,health,,
+JNJ,JANSSEN,Johnson & Johnson,health,,
+TMO,THERMO FISHER,Thermo Fisher,health,,
+DGX,QUEST DIAGNOSTICS,Quest Diagnostics,health,,
+EBS,EMERGENT BIOSOLUTIONS,Emergent BioSolutions,health,,BARDA stockpile contracts
+FLR,FLUOR,Fluor,engineering,,
+J,JACOBS,Jacobs,engineering,,
+TTEK,TETRA TECH,Tetra Tech,engineering,,
+ACM,AECOM,AECOM,engineering,,
+LEU,CENTRUS,Centrus Energy,energy,2015-01-01,ex-USEC; relisted 2014
+FDX,FEDERAL EXPRESS,FedEx,logistics,,
+FDX,FEDEX,FedEx,logistics,,
+UPS,UNITED PARCEL SERVICE,UPS,logistics,,
+MMS,MAXIMUS,Maximus,services,,
+ICFI,ICF INCORPORATED,ICF International,services,,

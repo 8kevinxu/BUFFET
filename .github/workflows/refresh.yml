@@ -1,0 +1,43 @@
+name: refresh-data
+
+on:
+  schedule:
+    - cron: "17 13 * * 1" # Mondays 13:17 UTC — spending moves quarterly, weekly is plenty
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install -e "pipeline[thesis]"
+
+      - name: Run pipeline
+        working-directory: pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        # publish validates row counts and exits non-zero if a source silently
+        # broke, so a bad scrape fails this job (email alert) instead of
+        # committing empty data
+        run: python -m buffet.refresh
+
+      - name: Commit changed artifacts
+        run: |
+          git config user.name "buffet-refresh[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add web/public/data
+          if git diff --cached --quiet; then
+            echo "no data changes"
+          else
+            git commit -m "data: weekly refresh $(date -u +%F)"
+            git push
+          fi

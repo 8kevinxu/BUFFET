@@ -1,0 +1,19 @@
+[project]
+name = "buffet"
+version = "0.1.0"
+description = "Federal-spending -> stock-signal research pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+thesis = ["anthropic>=0.40"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["buffet*"]
