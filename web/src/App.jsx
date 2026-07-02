@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from 'react-router-dom'
 import { useData } from './useData.js'
 import Dashboard from './pages/Dashboard.jsx'
 import Backtest from './pages/Backtest.jsx'
+import Leaderboard from './pages/Leaderboard.jsx'
 import Company from './pages/Company.jsx'
 import Theory from './pages/Theory.jsx'
 import TickerTape from './components/TickerTape.jsx'
@@ -36,6 +37,7 @@ export default function App() {
         </span>
         <nav className="nav">
           <NavLink to="/" end>TERMINAL</NavLink>
+          <NavLink to="/growth">GROWTH</NavLink>
           <NavLink to="/backtest">BACKTEST</NavLink>
           <NavLink to="/theory">THEORY</NavLink>
         </nav>
@@ -49,6 +51,7 @@ export default function App() {
       </div>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/growth" element={<Leaderboard />} />
         <Route path="/backtest" element={<Backtest />} />
         <Route path="/company/:ticker" element={<Company />} />
         <Route path="/theory" element={<Theory />} />

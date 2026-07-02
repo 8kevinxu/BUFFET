@@ -6,8 +6,8 @@ tickers). News and thesis failures never fail the run; everything else does.
 import argparse
 import time
 
-from . import (backtest, fetch_news, fetch_prices, fetch_spending, publish,
-               rank, signals, thesis)
+from . import (backtest, fetch_news, fetch_prices, fetch_spending, growth,
+               publish, rank, signals, thesis)
 
 STAGES = [
     ("fetch_spending", fetch_spending.run, True),
@@ -15,6 +15,7 @@ STAGES = [
     ("signals", signals.run, True),
     ("backtest", backtest.run, True),
     ("rank", rank.run, True),
+    ("growth", growth.run, True),
     ("news", fetch_news.run, False),
     ("thesis", thesis.run, False),
     ("publish", publish.run, True),

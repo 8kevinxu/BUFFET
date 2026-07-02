@@ -32,6 +32,24 @@ PICKS_N = 10
 FADES_N = 5
 NEWS_PER_TICKER = 8
 
+# --- Growth projections (the leaderboard) ---
+# ann_growth = w_hist * ticker_cagr(lookback) + (1-w_hist) * spy_cagr(lookback)
+#              + spending tilt + signal bump (short horizons only).
+# w_hist shrinks and the CAGR clamp tightens as the horizon grows — long-run
+# single-stock returns mean-revert toward the market, and compounding an
+# outlier CAGR for 20 years produces nonsense.
+GROWTH_HORIZONS = {
+    "6m":  {"years": 0.5, "lookback": 1,  "w_hist": 0.50, "clamp": (-0.25, 0.45), "bump": True,  "tilt_scale": 1.0},
+    "1y":  {"years": 1.0, "lookback": 3,  "w_hist": 0.40, "clamp": (-0.25, 0.45), "bump": True,  "tilt_scale": 1.0},
+    "5y":  {"years": 5.0, "lookback": 10, "w_hist": 0.35, "clamp": (-0.15, 0.25), "bump": False, "tilt_scale": 0.6},
+    "20y": {"years": 20.0, "lookback": 20, "w_hist": 0.25, "clamp": (-0.08, 0.15), "bump": False, "tilt_scale": 0.3},
+}
+HIST_CAGR_CLAMP = (-0.50, 0.60)  # tame outlier trailing CAGRs before blending
+                                 # (the final clamp is just a safety rail)
+SPEND_TILT_COEF = 0.15      # fraction of 3y spending CAGR added as a tailwind tilt
+SPEND_TILT_CLAMP = 0.03     # tilt capped at ±3%/yr
+SPEND_TILT_MIN_BASE = 10e6  # need $10M+ trailing-4q base 3y ago to compute a trend
+
 # --- Politeness ---
 HTTP_TIMEOUT = 60
 MIN_INTERVAL = {            # seconds between requests, per host

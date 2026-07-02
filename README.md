@@ -47,10 +47,17 @@ gracefully and the UI shows a `THESIS STALE` tag.
 5. **`rank`** — the signal applied to the newest usable quarter → top-10 longs
    and top-5 fades. News and the Claude thesis are presentation only — never
    inputs to the score.
-6. **`news`** — Google News RSS (primary, keyless) + GDELT (secondary,
+6. **`growth`** — the GROWTH leaderboard: projected 6m/1y/5y/20y total return
+   per ticker. An explicit toy extrapolation, decomposed in the UI: trailing
+   CAGR (weighted by how much of the lookback the ticker actually traded,
+   outliers clamped) shrunk toward SPY's full-lookback CAGR, plus a damped
+   3-year spending-trend tilt that decays with horizon, plus (6m/1y only) the
+   backtested signal bump when a LONG fired. Per-horizon ceilings stop 20-year
+   compounding fantasies; capped rows are tagged `CAP`.
+7. **`news`** — Google News RSS (primary, keyless) + GDELT (secondary,
    1 req/6 s with a circuit breaker; it penalty-boxes IPs).
-7. **`thesis`** — Claude writes the pick narratives (cached by input hash).
-8. **`publish`** — schema/row-count-validated JSON into `web/public/data/`
+8. **`thesis`** — Claude writes the pick narratives (cached by input hash).
+9. **`publish`** — schema/row-count-validated JSON into `web/public/data/`
    (committed, so the static site deploys with zero build-time fetching).
 
 Run one stage: `cd pipeline && ../.venv/bin/python -m buffet.refresh --stage rank`
