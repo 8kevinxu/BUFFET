@@ -38,6 +38,24 @@
     "date": "2026-07-01",
     "price": 745.76
    }
+  },
+  {
+   "quarter_end": "2026-06-30",
+   "frozen_on": "2026-08-17",
+   "provisional_at_freeze": true,
+   "picks": [
+    {
+     "ticker": "ORCL",
+     "z": 3.685,
+     "materiality": 0.01286,
+     "entry_date": "2026-08-14",
+     "entry_price": 150.52
+    }
+   ],
+   "spy_entry": {
+    "date": "2026-08-14",
+    "price": 776.34
+   }
   }
  ]
 }
